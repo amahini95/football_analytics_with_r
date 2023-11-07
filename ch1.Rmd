@@ -1,30 +1,31 @@
 ---
 title: "Chapter 1"
 author: "Armin Mahini"
-date: "2023-11-02"
+date: "2023-11-07"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r air_yards}
+# Load play-by-play data for 2023 season
+library(tidyverse)
+library(nflfastR)
+pbp <- load_pbp(2023)
+# pipe data to be filtered to only retrieve passing plays where 'air_yards' are not missing
+pbp_pass <- 
+  pbp |>
+  filter(play_type == 'pass' & !is.na(air_yards))
+print(pbp_pass)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r aDOT}
+# aDOT = mean air yards per pass for QBs throwing 100+ yards
+# One way to measure quarterback aggressiveness (measured, in this case, by mean air yards per pass)
+pbp_adot <- 
+  pbp |> 
+  group_by(passer_id, passer) |>
+  summarize(n=n(), adot = mean(air_yards)) |>
+  filter(n >= 100 & !is.na(passer)) |>
+  arrange(-adot) |>
+  print(n=Inf)
+print(pbp_adot)
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
