@@ -1,0 +1,81 @@
+---
+title: "Chapter 2"
+author: "Armin Mahini"
+date: "2023-11-21"
+output: html_document
+---
+
+``` {r Load passing data}
+# Load play-by-play data for 2016-23 seasons
+library("tidyverse")
+library("nflfastR")
+library("ggthemes")
+
+pbp <- load_pbp(2016:2023)
+
+# Filter only passing plays
+pbp_pass <-
+  pbp |>
+  filter(play_type == "pass" & !is.na(air_yards))
+
+# Clean + wrangle the data:
+# 1. Long pass is >= 20 yds, else short pass
+# 2. Incomplete passes assigned NA are changed to a value of 0
+pbp_pass <-
+  pbp_pass |>
+  mutate(
+    pass_length_air_yards = ifelse(air_yards >= 20, "long", "short"),
+    passing_yards = ifelse(is.na(passing_yards), 0, passing_yards)
+  )
+```
+
+``` {r Summarizing all passing data}
+pbp_pass |>
+  pull(passing_yards) |>
+  summary()
+```
+
+``` {r Summarizing short passing data}
+pbp_pass |>
+  filter(pass_length_air_yards == "short") |>
+  pull(passing_yards) |>
+  summary()
+```
+
+``` {r Summarizing long passing data}
+pbp_pass |>
+  filter(pass_length_air_yards == "long") |>
+  pull(passing_yards) |>
+  summary()
+```
+
+``` {r Expected Points Added (EPA) - Short}
+pbp_pass |>
+  filter(pass_length_air_yards == "short") |>
+  pull(epa) |>
+  summary()
+```
+
+``` {r EPA - Long}
+pbp_pass |>
+  filter(pass_length_air_yards == "long") |>
+  pull(epa) |>
+  summary()
+```
+
+``` {r Plotting Data: Histograms}
+ggplot(pbp, aes(x=passing_yards)) +
+  geom_histogram()
+```
+
+``` {r Histogram for pass_depth_air_yards}
+pbp_pass |>
+  filter(pass_length_air_yards == "long") |>
+  ggplot(aes(passing_yards)) +
+  geom_histogram(binwidth = 1) +
+  ylab("Count") +
+  xlab("Yards gained (or lost) during passing plays on long passes") +
+  theme_bw()
+```
+
+``` {r}
